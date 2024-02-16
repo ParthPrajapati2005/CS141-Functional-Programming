@@ -19,7 +19,7 @@ import Graphics.Gloss (Picture)
 --------------------------------------------------------------------------------
 
 loadPNG :: String -> Image
-loadPNG name = scale 0.01 $ Leaf $ png $ "assets/" ++ name ++ ".png"
+loadPNG name = scale 0.1 $ Leaf $ png $ "assets/" ++ name ++ ".png"
 
 png :: FilePath -> Picture
 png fname = fromMaybe (Gloss.text "PNG ERROR")

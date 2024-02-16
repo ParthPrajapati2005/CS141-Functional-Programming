@@ -275,7 +275,7 @@ initialState = AS West (0,0) Set.empty
   element matches the input direction. This pair output is then applied to "head" which returns the pair itself as the output of the filter function is [(x,y)] not (x,y). I 
   assume that it is safe to use "head" here as we have covered every case of the "Direction" data type and will not get an empty list. Now that I have the correct pair, this is
   then applied to the "snd" function which returns the second element in the pair, returning the value we need. In my implementation for rightOf, I use top-level pattern matching 
-  which outputs the correct direction given an input. In my opinion, in this case, I believe that the top-level pattern matching method is better, as it is readable and simple
+  which outputs the correct direction given an input. In mt opinion, in this case, I belive that the top-level pattern matching method is better, as it is readable and simple
   to understand and code. However, if there were to be a wider range of inputs and outputs, this method may not be very practical, as top level pattern matching for lots of cases 
   can be quite long. In such cases, this list method may be better.
 -}
@@ -303,7 +303,7 @@ or rightOf with its previous direction. I created a function called getNewPositi
 will increment/decrement the x and y values depending on the new direction. I could have also merged both of these functions into one, however I did not do this as I think that by
 creating separate functions, it makes my code more readable, modular and robust. It also means that the function could be used else where. The final step was to then change the 
 color of the square that it was on. I did this by using the Set.delete and Set.insert methods which removes a position from the set if it needs to be changed to white, or adds a 
-position to the set if it needs to be changed to black. Also, as we return an AntState, we have AS at the beginning of the expression. 
+position to the set if it needs to be changed to black. Also, as we return an AnstState, we have AS at the beginning of the expression. 
 -}
 
 checkIfMember :: (Int, Int) -> Set(Int, Int) -> Bool        --Returns true if position is in the Set and false otherwise
@@ -330,7 +330,7 @@ step (AS direction position set) =
 
   There are no tests for this. You can use `stack run` to test your implementation.
 
-  In my first implementation for Ex9, I have illustrated Langtons Ant. To achieve this, I used a combination of implicit recursion, pattern matching and function chaining. 
+  In my implementation for Ex9, I have illustrated Langtons Ant. To achieve this, I used a combination of implicit recursion, pattern matching and function chaining. 
   I first call a helper function which will call the render function n times as it means that n black squares need to be drawn. The iterateFrames helper function uses
   implicit recursion and has a base case of the 0th frame, for when no more squares need to be drawn for that iteration. If it has not reached the base case, it recursively 
   calls it self with the frames value being decremented, and the new state which is generated from calling the "step" function above with the current state. The new state is
@@ -342,15 +342,7 @@ step (AS direction position set) =
   the function will compute the last 999 frames in order to get to the 1000th frame - which is EXTREMELY space inefficient. I considered using a recursive method to pass in the 
   previous frame as a parameter so it will only need to compute once per frame, however I soon realised that I could not do this as whenever the animation function is called, 
   the function loses all the information from its previous frame. For example, when doing animation 10, we do not have the AntState at frame 9 as the function is called 
-  independently, which means I would need to recompute all of that information. I then needed to render the ant image itself onto the screen with its direction. To do this, 
-  I again use the <@> operator which will combine the ant image and the black squares. I do this directly within the animation function. I call another helper function called
-  "renderAntImage" to do this. I take the input AntState and utilse the direction and position of the Ant to render it. As before, I use the offset function to translate the
-  image into its position on the screen. But before this step, I first rotate the ant image (defined in Images.hs) according to the given direction. I do this by using a case
-  statement upon the direction and returning a float value which corresponds to the angle to rotate the image. I then pass this value into the rotate function defined in 
-  Transforms.hs. Note how I use Hatch.rotate instead of just rotate because it collides with a similar function which is provided in Data.Bits. Finally, I realised that when 
-  running the animation, I have to zoom in a lot as it is very small on the screen. To resolve this, I chained the render functions to the "scale" function defined in Transforms.hs 
-  to enlarge it by a constant value (called scaleFactor set to 20). I made the scaleFactor as a constant, so It can be changed easily. I also realised that the scaling for the
-  ant image was too big compared to the size of the squares, so I had to make one small change in the Images.hs file and changed the scaling from 0.1 to 0.01. This concludes ths first implementation.
+  independently, which means I would need to recompute all of that information. This concludes ths first implementation.
 
   In my second, implementation I eleminate using the "iterateFrames" method from the first method by utilising a combination of the "iterate" function and the (!!) index
   operator. The iterate function will return an infinite list of recursive applications of the step function to the initial state. Something like [step(initialState), step(step(initialState))...].
@@ -373,58 +365,34 @@ allAntStates :: [AntState]                                            --SECOND I
 allAntStates = iterate step initialState
 
 animation :: Int -> Image
-animation frame = scale scaleFactor (renderAntState (allAntStates !! frame)) <@> scale scaleFactor (renderAntImage (allAntStates !! frame))
-
-scaleFactor :: Float
-scaleFactor = 20
+animation frame = renderAntState (allAntStates !! frame)
 
 renderAntState :: AntState -> Image
 renderAntState (AS _ _ set) = foldl renderAnt blank (Set.toList set)
   where
     renderAnt img (a, b) = offset a b (rect 1 1) <@> img
 
-renderAntImage :: AntState -> Image
-renderAntImage (AS direction (x,y) _ ) = offset x y (Hatch.rotate getAngle ant)
-  where
-    getAngle = case direction of
-                  North -> 0
-                  East -> 90
-                  South -> 180
-                  West -> 270
-
 
 {-
-animation :: Int -> Image
-animation frame = scale scaleFactor (renderAntState (iterateFrames frame initialState)) <@> scale scaleFactor (renderAntImage (iterateFrames frame initialState))
-
-scaleFactor :: Float
-scaleFactor = 20
 
 iterateFrames :: Int -> AntState -> AntState
 iterateFrames 0 state = state
 iterateFrames frame state = iterateFrames (frame - 1) (step state)   --ORIGINAL IMPLEMENTATION EQUIVALENT WITH FOLDL - TIME INTENSIVE
 
+animation :: Int -> Image
+animation frame = renderAntState (iterateFrames frame initialState)
+
 renderAntState :: AntState -> Image
 renderAntState (AS _ _ set) = foldl renderAnt blank (Set.toList set)
   where
     renderAnt img (a, b) = offset a b (rect 1 1) <@> img
 
-renderAntImage :: AntState -> Image
-renderAntImage (AS direction (x,y) _ ) = offset x y (Hatch.rotate getAngle ant)
-  where
-    getAngle = case direction of
-                  North -> 0
-                  East -> 90
-                  South -> 180
-                  West -> 270
 -}
- 
-{-
-animation :: Int -> Image
-animation frame = scale scaleFactor (renderAntState (iterateFrames frame initialState)) <@> scale scaleFactor (renderAntImage (iterateFrames frame initialState))  -- ORIGINAL IMPLEMENTATION
 
-scaleFactor :: Float
-scaleFactor = 20
+{- 
+
+animation :: Int -> Image
+animation frame = renderAntState (iterateFrames frame initialState)  -- ORIGINAL IMPLEMENTATION
 
 iterateFrames :: Int -> AntState -> AntState
 iterateFrames 0 state = state
@@ -436,12 +404,4 @@ renderAntState (AS _ _ set) = renderAntState' (Set.toList set) blank --Start of 
     renderAntState' [] img = img
     renderAntState' ((a, b):xs) img = renderAntState' xs (offset a b (rect 1 1) <@> img) --Render each of the black squared from the set onto the screen.
 
-renderAntImage :: AntState -> Image
-renderAntImage (AS direction (x,y) _ ) = offset x y (Hatch.rotate getAngle ant)
-  where
-    getAngle = case direction of
-                  North -> 0
-                  East -> 90
-                  South -> 180
-                  West -> 270
 -}
