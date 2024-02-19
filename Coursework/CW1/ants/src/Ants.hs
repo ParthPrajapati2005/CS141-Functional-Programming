@@ -19,6 +19,7 @@ import Hatch
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Bits -- Added this for Ex5
+import Data.List ( foldl' )
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -357,15 +358,16 @@ step (AS direction position set) =
   This infinite list is stored as "allAntStates". In the "animation" function I then use the (!!) index operator to select the antstate at the index "frame". Now, we only are only
   having to compute the value of a particular AntState once, and this is stored in allAntStates. Although this may be memory intensive, as we store the values of every AntState, we still are saving 
   computation power in the sense that we do not have to RECOMPUTE EVERY AntState EVERY frame as we are just accessing the AntState using an index instead. I also altered the "renderAntState" 
-  function to now use the "foldr" function to recursively render all of the black squares onto the screen. In other words foldl will do something like this: renderAnt(renderAnt(blank, set[0]), set[1])...
-  Of course, we cannot access set elements just by doing set[0], however this was for demonstrational purposes. Making this change makes the code shorter, cleaner and more robust. The helper function
-  "renderAnt" is responsible for rendering the squares onto the screen. This concludes my second implementation.
+  function to now use the "foldl'" function to recursively render all of the black squares onto the screen. In other words foldl' will do something like this: renderAnt(renderAnt(blank, set[0]), set[1])...
+  Of course, we cannot access set elements just by doing set[0], however this was for demonstrational purposes. I used the foldl' function over the normal foldl' function because it is much more memory
+  effieicent as it will compute as far as it can before folding. Making this change makes the code shorter, cleaner and more robust. The helper function "renderAnt" is responsible for rendering the 
+  squares onto the screen. This concludes my second implementation.
 
   Overall, both implementations are memory intensive, the first implementation is speed and memory inefficient, as we recompute every AntState every time the animation function is called. However, 
   once recomputed, the call stack of the AntStates is cleared. For the second implementation, it computes an infinite list of every AntState in one go, so we do not have to recompute it however the 
   downside to this is that we now are storing EVERY AntState in memory untill the program is killed. An advantage however, could be that this implementation is more speed effecient. The best 
   implementation to use depends on what resources we have, and what rescources we are prioritising out of speed/time and memory. I have also included an upgraded version of my first implementation, 
-  however it uses foldl instead of its recursive function. 
+  however it uses foldl' instead of its recursive function. 
 
 -}
 
@@ -379,7 +381,7 @@ scaleFactor :: Float
 scaleFactor = 20
 
 renderAntState :: AntState -> Image
-renderAntState (AS _ _ set) = foldl renderAnt blank (Set.toList set)
+renderAntState (AS _ _ set) = foldl' renderAnt blank (Set.toList set)
   where
     renderAnt img (a, b) = offset a b (rect 1 1) <@> img
 
@@ -402,10 +404,10 @@ scaleFactor = 20
 
 iterateFrames :: Int -> AntState -> AntState
 iterateFrames 0 state = state
-iterateFrames frame state = iterateFrames (frame - 1) (step state)   --ORIGINAL IMPLEMENTATION EQUIVALENT WITH FOLDL - TIME INTENSIVE
+iterateFrames frame state = iterateFrames (frame - 1) (step state)   --ORIGINAL IMPLEMENTATION EQUIVALENT WITH FOLDL' - TIME INTENSIVE
 
 renderAntState :: AntState -> Image
-renderAntState (AS _ _ set) = foldl renderAnt blank (Set.toList set)
+renderAntState (AS _ _ set) = foldl' renderAnt blank (Set.toList set)
   where
     renderAnt img (a, b) = offset a b (rect 1 1) <@> img
 
